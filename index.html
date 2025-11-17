@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Perfumería Osorio Ramírez — Catálogo Interactivo</title>
+  <style>
+    :root{--bg:#000000;--card:#0b0b0b;--gold:#caa469;--muted:#9aa3ad;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{margin:0;background:var(--bg);color:#eee;-webkit-font-smoothing:antialiased}
+    header{padding:28px 20px;display:flex;align-items:center;gap:16px;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo-mark{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);font-size:20px;box-shadow:0 8px 30px rgba(202,164,105,0.06)}
+    h1{margin:0;font-size:20px;color:var(--gold);letter-spacing:0.4px}
+    p.lead{margin:0;color:#bfb7a8}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0;align-items:center}
+    .chip{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 14px;border-radius:999px;color:#ddd;cursor:pointer}
+    .chip.active{background:linear-gradient(90deg,var(--gold),#f3d9a8);color:#111;border-color:transparent;box-shadow:0 6px 18px rgba(202,164,105,0.12)}
+    .search{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .search input{padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#eee}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.02));border-radius:14px;padding:14px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:10px;transition:transform .22s ease, box-shadow .22s ease}
+    .card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(202,164,105,0.08)}
+    .imgwrap{height:220px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.02)}
+    .imgwrap img{max-width:100%;max-height:100%;object-fit:contain}
+    .meta{display:flex;justify-content:space-between;align-items:center}
+    .title{font-weight:700;color:#fff}
+    .type{font-size:13px;color:#cfc6b5}
+    .desc{font-size:13px;color:#ddd}
+    .actions{display:flex;gap:8px;align-items:center}
+    .primary{flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--gold),#f3d9a8);color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .primary .emoji{margin-left:8px}
+    .secondary{padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#ddd;cursor:pointer}
+    footer{padding:24px;text-align:center;color:#8f8370}
+    @media (max-width:720px){header{flex-direction:column;align-items:flex-start}.search{margin-left:0;width:100%}.controls{gap:8px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div style="width:64px;height:64px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+  <img src="images/logo.png" alt="Perfumería Osorio Ramírez" style="width:100%;height:100%;object-fit:contain;">
+</div>
+      <div>
+        <h1>Perfumería Osorio Ramírez</h1>
+        <p class="lead">Donde cada fragancia cuenta una historia, y cada aroma revela tu esencia.</p>
+      </div>
+    </div>
+    <div class="contact" style="text-align:right;color:#bfb7a8">Contacto: <strong>+57 304 375 7583</strong></div>
+  </header>
+
+  <main class="container">
+    <div class="controls">
+      <button class="chip active" data-filter="all">Todos</button>
+      <button class="chip" data-filter="amaderados">Amaderados</button>
+      <button class="chip" data-filter="frutales">Frutales</button>
+      <button class="chip" data-filter="unisex">Unisex</button>
+      <button class="chip" data-filter="nicho">Nicho</button>
+      <button class="chip" data-filter="dulces">Dulces</button>
+      <div class="search">
+        <input id="searchInput" placeholder="Buscar por nombre o nota..." />
+      </div>
+    </div>
+
+    <section class="grid" id="catalog"></section>
+  </main>
+
+  <footer>
+    <small>Catálogo interactivo — Perfumería Osorio Ramírez · Diseñado para compartir y vender vía WhatsApp.</small>
+  </footer>
+
+  <script>
+    const WHATSAPP_NUMBER = '573043757583';
+
+    const products = [
+      {id:1, name:'212 AQUA MEN', category:'unisex', type:'Fresco acuático', notes:'Agua marina, pomelo, maderas claras', desc:'Refrescante y moderno, perfecto para días cálidos o actividades al aire libre.', image:'images/s14.jpg', price:74999},
+      {id:2, name:'212 FEM 1.1', category:'frutales', type:'Frutal floral', notes:'Mandarina, gardenia, almizcle', desc:'Elegante y sensual, una fragancia que envuelve con dulzura y frescura.', image:'images/s15.jpg', price:79999},
+      {id:3, name:'212 HEROES FEM 1.1', category:'frutales', type:'Floral frutal', notes:'Frutas exóticas, jazmín, vainilla', desc:'Vibrante y optimista, diseñada para mujeres audaces.', image:'images/s16.jpg', price:95999},
+      {id:4, name:'212 HEROES MEN 1.1', category:'unisex', type:'Aromático', notes:'Lavanda, pera, geranio', desc:'Aroma fresco y juvenil con un toque rebelde.', image:'images/s17.jpg', price:95999},
+      {id:5, name:'212 HEROES MTV MEN 1.1', category:'unisex', type:'Amaderado especiado', notes:'Cardamomo, pimienta negra, vetiver', desc:'Carácter y energía urbana en una fragancia moderna.', image:'images/s18.jpg', price:95999},
+      {id:6, name:'360 CORAL', category:'frutales', type:'Frutal suave', notes:'Melón, durazno, vainilla', desc:'Dulce y femenina, ideal para los días soleados.', image:'images/s19.jpg', price:95999},
+      {id:7, name:'360 MEN 1.1', category:'unisex', type:'Cítrico amaderado', notes:'Limón, almizcle, cedro', desc:'Aroma limpio y masculino con toques frescos y modernos.', image:'images/s20.jpg', price:95999},
+      {id:8, name:'360 RED FEM', category:'dulces', type:'Oriental dulce', notes:'Canela, vainilla, ámbar', desc:'Sensual y duradera, perfecta para noches especiales.', image:'images/s21.jpg', price:75999},
+      {id:9, name:'9 PM 1.1', category:'dulces', type:'Gourmand', notes:'Vainilla, haba tonka, canela', desc:'Cálida, envolvente y adictiva. Ideal para la noche.', image:'images/s22.jpg', price:99999},
+      {id:10, name:'AHLI CORVUS CAJA', category:'nicho', type:'Nicho amaderado', notes:'Oud, cuero, incienso', desc:'Oscura y misteriosa, un perfume de lujo con carácter.', image:'images/s23.jpg', price:106999},
+      {id:11, name:'AHLI KARPUS 1.1 COFRE PASTA', category:'nicho', type:'Ambarado', notes:'Vainilla, resinas, maderas orientales', desc:'Exótico y lujoso, ideal para quienes buscan algo distinto.', image:'images/s24.jpg', price:109988},
+      {id:12, name:'AHLI VEGA 1.1 COFRE PASTA', category:'nicho', type:'Amaderado oriental', notes:'Oud, ámbar, almizcle', desc:'Equilibrio entre dulzura y poder, muy elegante.', image:'images/s25.jpg', price:190999},
+      {id:13, name:'AGUA GIO 1.1', category:'unisex', type:'Cítrico marino', notes:'Bergamota, jazmín, almizcle', desc:'Refrescante y natural, un clásico atemporal.', image:'images/s26.jpg', price:78999},
+      {id:14, name:'AGUA GIO PROFUMO 1.1', category:'amaderados', type:'Amaderado marino', notes:'Incienso, pachulí, notas marinas', desc:'Profundo y elegante, una versión más intensa del clásico.', image:'images/s27.jpg', price:93999},
+      {id:15, name:'ALLURE SPORT', category:'unisex', type:'Fresco especiado', notes:'Naranja, almizcle, especias suaves', desc:'Deportiva y moderna, para espíritus activos.', image:'images/s28.jpg', price:78999},
+      {id:16, name:'ANGEL O DEMONIO', category:'dulces', type:'Oriental floral', notes:'Vainilla, lirio, jazmín', desc:'Contraste entre dulzura y misterio, irresistible.', image:'images/s29.jpg', price:78999},
+      {id:17, name:'AQUA DE BVLGARY', category:'unisex', type:'Acuático', notes:'Mandarina, ámbar, notas marinas', desc:'Limpia y elegante, inspirada en el océano.', image:'images/s30.jpg', price:78999},
+      {id:18, name:'ARABIANS TONKA 1.1', category:'nicho', type:'Oriental especiado', notes:'Tonka, azafrán, rosa', desc:'Exuberante, intensa y elegante. Una joya árabe.', image:'images/s31.jpg', price:110999},
+      {id:19, name:'BACARAT MAISON FRANCIS', category:'nicho', type:'Ambarado', notes:'Azafrán, jazmín, ámbar gris', desc:'Lujosa y única, una fragancia que deja huella.', image:'images/s32.jpg', price:84999},
+      {id:20, name:'BAD BOY PARFUM 1.1', category:'amaderados', type:'Amaderado oriental', notes:'Cacao, cuero, pimienta negra', desc:'Poderoso y moderno, para hombres seguros de sí mismos.', image:'images/s33.jpg', price:96999},
+      
+         {id:21, name:'BERGAMOTE 22 1.1', category:'unisex', type:'Cítrico amaderado', notes:'Bergamota, vetiver, almizcle blanco', desc:'Refrescante y sofisticado, mezcla la pureza del cítrico con la elegancia de la madera. Perfecto para uso diario o climas cálidos.', image:'images/s34.jpg', price:95999},
+
+      {id:22, name:'BHARARA BLUE 1.1 COFRE', category:'amaderados', type:'Aromático acuático', notes:'Toronja, jazmín, maderas marinas', desc:'Inspirado en la libertad del océano, un aroma limpio y moderno con toques frescos y vibrantes.', image:'images/s35.jpg', price:149999},
+
+      {id:23, name:'BHARARA KING 1.1 COFRE', category:'dulces', type:'Ambarado dulce', notes:'Canela, vainilla, ámbar', desc:'Magnético y seductor, una fragancia que combina dulzura intensa con un fondo cálido y poderoso.', image:'images/s36.jpg', price:149999},
+
+      {id:24, name:'BHARARA KING PARFUM 1.1 COFRE', category:'nicho', type:'Oriental amaderado', notes:'Oud, cuero, tonka', desc:'Profunda y lujosa, diseñada para quienes buscan un perfume con presencia y elegancia imponente.', image:'images/s37.jpg', price:185999},
+
+      {id:25, name:'BHARARA NICHE FEMME 1.1 COFRE', category:'nicho', type:'Floral ambarado', notes:'Rosa, jazmín, ámbar gris', desc:'Exquisita y refinada, evoca feminidad y fuerza con un toque sofisticado que perdura en la piel.', image:'images/s38.jpg', price:149999},
+      {id:26, name:'BHARARA ONIX 1.1 COFRE', category:'nicho', type:'Ambarado especiado', notes:'Incienso, vainilla, maderas oscuras', desc:'Un perfume profundo y elegante, con un toque de misterio que deja una estela inolvidable.', image:'images/s39.jpg', price:152999},
+
+      {id:27, name:'BHARARA SCARLET 1.1 COFRE', category:'dulces', type:'Floral frutal', notes:'Frambuesa, rosa, vainilla', desc:'Dulce y femenina, combina la frescura de las frutas con un fondo sensual y aterciopelado.', image:'images/s40.jpg', price:229999},
+
+      {id:28, name:'BHARARA ROSE COFRE 1.1', category:'nicho', type:'Floral oriental', notes:'Rosa de Damasco, oud, ámbar', desc:'Una fragancia majestuosa donde la rosa se mezcla con notas cálidas y exóticas de medio oriente.', image:'images/s41.jpg', price:150999},
+
+      {id:29, name:'BHARARA VIKING KHASMIR 1.1 COFRE', category:'nicho', type:'Amaderado especiado', notes:'Azafrán, madera de cedro, ámbar', desc:'Inspirada en la fuerza y nobleza, transmite elegancia y poder con un fondo oriental intenso.', image:'images/s42.jpg', price:189999},
+
+      {id:30, name:'BHARARA VIKING DUBAI 1.1 COFRE', category:'nicho', type:'Oriental ambarado', notes:'Oud, ámbar, cuero', desc:'Lujo árabe en estado puro. Un aroma opulento, envolvente y sofisticado.', image:'images/s43.jpg', price:179999},
+
+      {id:31, name:'BHARARA VIKING CAIRO 1.1 COFRE', category:'nicho', type:'Amaderado oriental', notes:'Incienso, resinas, vainilla', desc:'Equilibrio entre dulzura y misticismo. Perfecto para quienes buscan algo exclusivo y duradero.', image:'images/s44.jpg', price:189999},
+
+      {id:32, name:'BE DELICIUS', category:'frutales', type:'Frutal verde', notes:'Manzana verde, pepino, magnolia', desc:'Fresca, chispeante y natural. Evoca energía, juventud y vitalidad.', image:'images/s45.jpg', price:74999},
+
+      {id:33, name:'BLACK XS MEN 1.1', category:'amaderados', type:'Amaderado dulce', notes:'Canela, pachulí, limón', desc:'Rebelde y seductora, combina energía masculina con un toque dulce irresistible.', image:'images/s46.jpg', price:94999},
+
+      {id:34, name:'BLACK XS APHRODISIAQUE 1.1', category:'dulces', type:'Oriental floral', notes:'Vainilla negra, flor de azahar, ámbar', desc:'Sensual y provocativa, diseñada para atraer miradas y dejar huella.', image:'images/s47.jpg', price:94999},
+
+      {id:35, name:'BLACK XS APHRODISIAQUE', category:'dulces', type:'Oriental floral', notes:'Vainilla, cacao, notas ambaradas', desc:'Una versión más intensa y adictiva, ideal para la noche y momentos especiales.', image:'images/s48.jpg', price:94999},
+      {id:36, name:'BLACK XS FEM', category:'dulces', type:'Floral ambarado', notes:'Vainilla, arándano, cacao', desc:'Intensa y juvenil, combina dulzura rebelde con un toque oscuro y seductor.', image:'images/s49.jpg', price:94999},
+
+      {id:37, name:'BLACK XS LECXES 1.1', category:'amaderados', type:'Amaderado especiado', notes:'Pimienta, cacao, pachulí', desc:'Un aroma envolvente y moderno, ideal para quienes buscan elegancia sin esfuerzo.', image:'images/s50.jpg', price:94999},
+
+      {id:38, name:'BLEU CHANEL 1.1', category:'amaderados', type:'Aromático amaderado', notes:'Pomelo, incienso, cedro', desc:'Equilibrio perfecto entre frescura y profundidad. Atemporal y sofisticado.', image:'images/s51.jpg', price:94999},
+
+      {id:39, name:'BLV BVLGARY', category:'unisex', type:'Amaderado especiado', notes:'Cardamomo, jengibre, sándalo', desc:'Elegante y limpio, combina calidez y frescura en una mezcla única.', image:'images/s52.jpg', price:74999},
+
+      {id:40, name:'BOND BLEECKER 1.1', category:'nicho', type:'Ambarado floral', notes:'Cassia, pachulí, vainilla', desc:'Lujosa y envolvente, ideal para quienes buscan un perfume con presencia y distinción.', image:'images/s53.jpg', price:104999},
+
+      {id:41, name:'BOSS BOTHLE 1.1', category:'amaderados', type:'Amaderado especiado', notes:'Manzana, canela, sándalo', desc:'Clásico moderno. Una fragancia masculina, cálida y sofisticada.', image:'images/s54.jpg', price:94999},
+
+      {id:42, name:'BOSS BOTHLE NIGHT 1.1', category:'amaderados', type:'Amaderado aromático', notes:'Lavanda, abedul, almizcle', desc:'Misteriosa y elegante, pensada para la noche y la conquista.', image:'images/s55.jpg', price:94999},
+
+      {id:43, name:'BOSS ORANGE 1.1', category:'frutales', type:'Frutal amaderado', notes:'Manzana, incienso, vainilla', desc:'Alegre y cálido, combina energía y serenidad en un aroma positivo.', image:'images/s56.jpg', price:94999},
+
+      {id:44, name:'BOSS THE SCENT FEM 1.1', category:'dulces', type:'Floral frutal', notes:'Durazno, freesia, cacao', desc:'Atractiva y sofisticada, despierta los sentidos con un toque dulce y elegante.', image:'images/s57.jpg', price:93999},
+
+      {id:45, name:'BOSS UNLIMITED 1.1', category:'unisex', type:'Cítrico fresco', notes:'Piña, menta, sándalo', desc:'Refrescante y energizante, ideal para uso diario o días soleados.', image:'images/s58.jpg', price:94999},
+
+      {id:46, name:'BRIGHT CRYSTAL 1.1', category:'frutales', type:'Floral frutal', notes:'Granada, peonía, ámbar', desc:'Brillante y femenina, transmite frescura, belleza y suavidad en cada nota.', image:'images/s59.jpg', price:94999},
+
+      {id:47, name:'BURBERRY HER 1.1', category:'dulces', type:'Frutal gourmand', notes:'Fresas, grosella negra, vainilla', desc:'Dulce y adictiva, un aroma alegre que envuelve como un abrazo.', image:'images/s60.jpg', price:95999},
+
+      {id:48, name:'BURBERRY HER ELIXIR 1.1', category:'dulces', type:'Oriental frutal', notes:'Fresa, ámbar, sándalo', desc:'Más intensa y cremosa, combina elegancia británica con un toque moderno.', image:'images/s61.jpg', price:109999},
+
+      {id:49, name:'BVLGARY MAN EXTREME 1.1', category:'amaderados', type:'Cítrico amaderado', notes:'Toronja, cactus, ámbar', desc:'Energética y masculina, mezcla frescura mediterránea con fuerza natural.', image:'images/s62.jpg', price:105999},
+
+      {id:50, name:'BVLGARY MAN IN BLACK 1.1', category:'amaderados', type:'Ambarado especiado', notes:'Ron, cuero, especias cálidas', desc:'Poderosa y magnética, ideal para hombres seguros que dejan huella.', image:'images/s63.jpg', price:105999},
+      {id:51, name:'CAN CAN 1.1', category:'dulces', type:'Floral frutal', notes:'Nectarina, flor de azahar, ámbar', desc:'Coqueta y femenina, un perfume alegre con un toque sensual y juguetón.', image:'images/s64.jpg', price:94999},
+
+      {id:52, name:'CH FEM 1.1', category:'florales', type:'Floral ambarado', notes:'Jazmín, praliné, cuero suave', desc:'Elegancia moderna con un toque romántico. Perfecta para destacar sin esfuerzo.', image:'images/s65.jpg', price:74999},
+
+      {id:53, name:'CH MEN 1.1', category:'amaderados', type:'Amaderado especiado', notes:'Violeta, cuero, vainilla', desc:'Carismático y cálido, representa al hombre sofisticado con un espíritu aventurero.', image:'images/s66.jpg', price:94999},
+
+      {id:54, name:'CHANCE CHANEL', category:'florales', type:'Floral chipre', notes:'Jazmín, pachulí, almizcle blanco', desc:'Equilibrio entre frescura y elegancia. Una fragancia luminosa y atemporal.', image:'images/s67.jpg', price:74999},
+
+      {id:55, name:'CKIN2U FEM 1.1', category:'frutales', type:'Floral fresco', notes:'Toronja rosa, orquídea, vainilla', desc:'Joven y dinámica, ideal para espíritus libres que disfrutan el presente.', image:'images/s68.jpg', price:94999},
+
+      {id:56, name:'CK ONE 1.1', category:'unisex', type:'Cítrico aromático', notes:'Bergamota, té verde, almizcle', desc:'Un ícono unisex: limpio, versátil y refrescante, perfecto para cualquier ocasión.', image:'images/s69.jpg', price:94999},
+
+      {id:57, name:'CLOUD 1.1', category:'dulces', type:'Gourmand floral', notes:'Lavanda, coco, crema batida', desc:'Suave y soñadora, una fragancia que transmite calma, dulzura y fantasía.', image:'images/s70.jpg', price:105999},
+
+      {id:58, name:'CLOUD 2.0 1.1', category:'dulces', type:'Floral ambarado', notes:'Vainilla, almizcle, ambreta', desc:'Más sofisticada y profunda que la original, con un toque elegante y reconfortante.', image:'images/s71.jpg', price:105999},
+
+      {id:59, name:'CLOUD PINK 1.1', category:'dulces', type:'Frutal gourmand', notes:'Frambuesa, vainilla, crema floral', desc:'Una nube rosada de dulzura moderna, perfecta para destacar con suavidad y estilo.', image:'images/s72.jpg', price:105999},
+
+      {id:60, name:'CLUB D NUIT INTENSE 1.1', category:'amaderados', type:'Amaderado cítrico', notes:'Limón, abedul, almizcle', desc:'Potente y masculino, una fragancia intensa que deja una estela inolvidable.', image:'images/s73.jpg', price:149999},
+
+      {id:61, name:'CLUB D NUIT MILESTONE 1.1', category:'nicho', type:'Ambarado marino', notes:'Notas salinas, sándalo, almizcle', desc:'Refinada y lujosa, inspirada en el espíritu de libertad y elegancia.', image:'images/s74.jpg', price:109999},
+
+      {id:62, name:'CLUB D NUIT UNTOLD 1.1', category:'nicho', type:'Ambarado floral', notes:'Rosa, azafrán, madera de ámbar', desc:'Misteriosa y opulenta, una esencia intensa que representa poder y exclusividad.', image:'images/s75.jpg', price:105999},
+
+      {id:63, name:'CITY OF STAR 1.1', category:'frutales', type:'Cítrico floral', notes:'Mandarina, flor de naranjo, almizcle', desc:'Brillante y fresca, ideal para los días llenos de energía y optimismo.', image:'images/s76.jpg', price:94999},
+
+      {id:64, name:'COCO CHANEL', category:'clásicos', type:'Floral oriental', notes:'Ylang-ylang, jazmín, sándalo', desc:'Elegancia pura en cada nota. La esencia atemporal del lujo femenino.', image:'images/s77.jpg', price:74999},
+
+      {id:65, name:'COCO MADEMOISELLE 1.1', category:'florales', type:'Floral chipre', notes:'Rosa, patchulí, vetiver', desc:'Refinada y moderna, una fragancia que irradia elegancia y seguridad.', image:'images/s78.jpg', price:90999},
+
+      {id:66, name:'CREED AVENTUS 1.1', category:'nicho', type:'Frutal amaderado', notes:'Piña, abedul, almizcle', desc:'Poder y éxito en una botella. Ícono de distinción y carisma masculino.', image:'images/s79.jpg', price:94999},
+
+      {id:67, name:'CREED IMPERIAL 1.1', category:'nicho', type:'Ambarado marino', notes:'Sal marina, melón, iris', desc:'Fresco y sofisticado, una fragancia luminosa con espíritu real.', image:'images/s80.jpg', price:94999},
+
+      {id:68, name:'CREED SILVER 1.1', category:'nicho', type:'Ambarado floral', notes:'Flor de azahar, almizcle, ámbar gris', desc:'Elegancia plateada: pura, refinada y perfectamente equilibrada.', image:'images/s81.jpg', price:94999},
+      {id:69, name:'DELINA 1.1', category:'nicho', type:'Floral afrutado', notes:'Lichi, rosa turca, almizcle', desc:'Femenina y elegante, una fragancia de lujo que combina dulzura y sofisticación con un toque romántico.', image:'images/s82.jpg', price:94999},
+
+      {id:70, name:'DEVOTION 1.1 D&G', category:'dulces', type:'Gourmand floral', notes:'Crema batida, vainilla, flor de azahar', desc:'Cálida y adictiva, una fragancia que celebra la pasión con notas cremosas y envolventes.', image:'images/s83.jpg', price:94999},
+
+      {id:71, name:'DIESEL ONLY THE BRAVE 1.1', category:'amaderados', type:'Amaderado oriental', notes:'Limón, ámbar, cedro', desc:'Potente y masculino, simboliza determinación, energía y confianza en uno mismo.', image:'images/s84.jpg', price:74999},
+
+      {id:72, name:'DIESEL ONLY THE BRAVE TATTO', category:'amaderados', type:'Ambarado especiado', notes:'Manzana, pimienta, tabaco', desc:'Audaz y rebelde, un perfume con carácter urbano que deja una huella intensa y magnética.', image:'images/s85.jpg', price:74999},
+
+      {id:73, name:'DYLAN BLUE MEN 1.1', category:'amaderados', type:'Aromático fougère', notes:'Bergamota, ambroxan, pachulí', desc:'Moderno y seductor, combina elegancia mediterránea con una fuerza contemporánea irresistible.', image:'images/s86.jpg', price:94999},
+      {id:74, name:'ECLAIRE LATTAFA 1.1', category:'dulces', type:'Gourmand floral', notes:'Caramelo, jazmín, vainilla', desc:'Dulce y envolvente, combina elegancia oriental con una calidez deliciosa que conquista al instante.', image:'images/s87.jpg', price:209999},
+
+      {id:75, name:'EROS ENERGY 1.1 AMARILLA', category:'cítricos', type:'Cítrico aromático', notes:'Limón, menta, manzana verde', desc:'Refrescante y vibrante, un aroma juvenil lleno de energía y confianza.', image:'images/s88.jpg', price:99999},
+
+      {id:76, name:'EROS FLAME 1.1', category:'amaderados', type:'Amaderado especiado', notes:'Mandarina, pimienta negra, cedro', desc:'Pasión e intensidad. Un perfume ardiente para quienes viven con fuerza y determinación.', image:'images/s89.jpg', price:99999},
+
+      {id:77, name:'EROS MEN', category:'amaderados', type:'Aromático oriental', notes:'Menta, haba tonka, vainilla', desc:'Icónico y seductor, representa la fuerza masculina con un toque sensual y fresco.', image:'images/s90.jpg', price:99999},
+
+      {id:78, name:'EROS MEN 1.1', category:'amaderados', type:'Aromático oriental', notes:'Limón, menta, geranio', desc:'Una versión refinada del clásico Eros, más equilibrada y moderna.', image:'images/s91.jpg', price:99999},
+
+      {id:79, name:'ERBA PURA 1.1 COFRE', category:'nicho', type:'Frutal ambarado', notes:'Naranja siciliana, almizcle blanco, ámbar gris', desc:'Exótica y lujosa, una fragancia brillante con notas frutales intensas y sofisticadas.', image:'images/s92.jpg', price:110989},
+
+      {id:80, name:'ETERNITY 1.1', category:'clásicos', type:'Floral aromático', notes:'Lavanda, mandarina, sándalo', desc:'Un clásico atemporal que evoca pureza, equilibrio y serenidad en cada nota.', image:'images/s93.jpg', price:94999},
+      {id:81, name:'FAKHAR LATTAFA 1.1 COFRE', category:'nicho', type:'Amaderado floral', notes:'Rosa, ámbar, almizcle', desc:'Refinada y moderna, combina la tradición árabe con un toque contemporáneo lleno de carácter.', image:'images/s94.jpg', price:169999},
+
+      {id:82, name:'FAME 1.1', category:'frutales', type:'Floral afrutado', notes:'Mango, jazmín, sándalo', desc:'Fresca y radiante, una fragancia luminosa que celebra la feminidad moderna.', image:'images/s95.jpg', price:94999},
+
+      {id:83, name:'FAME BLOOMING PINK 1.1', category:'dulces', type:'Floral dulce', notes:'Pera, jazmín, vainilla', desc:'Dulce y sofisticada, ideal para quienes aman destacar con elegancia y dulzura.', image:'images/s96.jpg', price:94999},
+
+      {id:84, name:'FANTASY 1.1', category:'dulces', type:'Gourmand', notes:'Kiwi, caramelo, almizcle blanco', desc:'Encantadora y juvenil, un aroma divertido que evoca sueños y emociones alegres.', image:'images/s97.jpg', price:94999},
+
+      {id:85, name:'FUNNY 1.1', category:'frutales', type:'Cítrico floral', notes:'Naranja amarga, té verde, jazmín', desc:'Fresca y optimista, perfecta para el día a día con un toque de naturalidad y energía.', image:'images/s98.jpg', price:74999},
+      {id:86, name:'GIVENCHY BLUE', category:'amaderados', type:'Aromático fresco', notes:'Lavanda, pomelo, cedro', desc:'Elegante y versátil, un equilibrio entre frescura y sofisticación masculina.', image:'images/s99.jpg', price:84999},
+
+      {id:87, name:'GOOD GIRL 1.1', category:'dulces', type:'Oriental floral', notes:'Cacao, almendra, jazmín', desc:'Icónica y seductora, combina dulzura y poder en una fragancia inolvidable.', image:'images/s100.jpg', price:94999},
+
+      {id:88, name:'GOOD GIRL BLUSH 1.1', category:'frutales', type:'Floral afrutado', notes:'Peonía, mandarina, vainilla', desc:'Ligera y romántica, un perfume que irradia feminidad y encanto natural.', image:'images/s101.jpg', price:94999},
+
+      {id:89, name:'GOOD GIRL VERY ROJA 1.1', category:'dulces', type:'Ambarado floral', notes:'Cereza, rosa, haba tonka', desc:'Pasional y atrevida, una versión más intensa y sofisticada del clásico Good Girl.', image:'images/s102.jpg', price:94999},
+      {id:90, name:'HARAMAIN ALVENTURE SILVER', category:'nicho', type:'Amaderado aromático', notes:'Bergamota, jazmín, almizcle', desc:'Inspirada en la elegancia moderna, una fragancia brillante con un toque de sofisticación oriental.', image:'images/s103.jpg', price:84999},
+
+      {id:91, name:'HARAMAIN AMBER GOLD COFRE', category:'nicho', type:'Ambarado oriental', notes:'Ámbar, vainilla, resinas dulces', desc:'Rica y envolvente, transmite lujo y calidez en cada nota.', image:'images/s104.jpg', price:149999},
+
+      {id:92, name:'HARAMAIN AMBER GOLD CAJA', category:'nicho', type:'Oriental dulce', notes:'Vainilla, ámbar gris, almizcle', desc:'Una fragancia intensa y opulenta, ideal para momentos especiales.', image:'images/s105.jpg', price:109999},
+
+      {id:93, name:'HARAMAIN ROUGE COFRE 1.1', category:'nicho', type:'Ambarado floral', notes:'Azafrán, jazmín, ámbar gris', desc:'Elegante y misteriosa, deja una estela sofisticada y adictiva.', image:'images/s106.jpg', price:106999},
+
+      {id:94, name:'HEIRES 1.1', category:'dulces', type:'Floral dulce', notes:'Cereza, vainilla, almizcle blanco', desc:'Juvenil y encantadora, ideal para quienes aman destacar con dulzura.', image:'images/s107.jpg', price:105999},
+
+      {id:95, name:'HUGO DE HUGO BOSS', category:'amaderados', type:'Verde aromático', notes:'Manzana, lavanda, pino', desc:'Fresco y natural, el clásico que representa autenticidad y energía masculina.', image:'images/s108.jpg', price:74999},
+
+      {id:96, name:'HUGO JUST DIFFERENT', category:'amaderados', type:'Aromático fresco', notes:'Menta, albahaca, cachemira', desc:'Dinámico y moderno, ideal para espíritus creativos y libres.', image:'images/s109.jpg', price:74999},
+
+      {id:97, name:'HUGO RED', category:'amaderados', type:'Oriental fresco', notes:'Toronja, ambar, cedro', desc:'Energético y provocador, combina notas frescas con una base cálida y sensual.', image:'images/s110.jpg', price:74999},
+      {id:98, name:'IMAGINATION LV 1.1', category:'nicho', type:'Cítrico ambarado', notes:'Naranja, bergamota, ámbar gris', desc:'Inspiradora y elegante, evoca libertad y creatividad con un toque sofisticado.', image:'images/s111.jpg', price:94999},
+
+      {id:99, name:'IMMENSITE LV 1.1', category:'nicho', type:'Acuático ambarado', notes:'Toronja, jengibre, ámbar gris', desc:'Refrescante y expansiva, una fragancia luminosa que transmite energía y serenidad.', image:'images/s112.jpg', price:94999},
+
+      {id:100, name:'INITIO OUD FOR GREATNESS 1.1 COFRE', category:'nicho', type:'Amaderado especiado', notes:'Oud, azafrán, almizcle', desc:'Poderosa y lujosa, una fragancia que irradia autoridad, elegancia y misticismo.', image:'images/s113.jpg', price:105999},
+
+      {id:101, name:'INVICTUS LEGEND 1.1', category:'amaderados', type:'Aromático amaderado', notes:'Pomelo, madera de gaiac, ámbar gris', desc:'Intenso y heroico, un perfume que transmite fuerza, victoria y pasión.', image:'images/s114.jpg', price:94999},
+
+      {id:102, name:'INVICTUS 1.1', category:'amaderados', type:'Acuático fresco', notes:'Toronja, hojas de laurel, madera de ámbar', desc:'Vibrante y deportivo, la esencia del triunfo en una fragancia moderna.', image:'images/s115.jpg', price:94999},
+
+      {id:103, name:'INVICTUS ONIX 1.1', category:'amaderados', type:'Oriental amaderado', notes:'Lavanda, pachulí, ámbar', desc:'Más oscuro y misterioso, diseñado para quienes buscan un toque profundo y seductor.', image:'images/s116.jpg', price:94999},
+
+      {id:104, name:'INVICTUS VICTORY 1.1', category:'dulces', type:'Oriental dulce', notes:'Vainilla, haba tonka, incienso', desc:'Dulce y poderosa, una fragancia de energía, ambición y carisma.', image:'images/s117.jpg', price:94999},
+
+      {id:105, name:'INVICTUS VICTORY ELIXIR PARFUM 1.1', category:'dulces', type:'Ambarado intenso', notes:'Vainilla, lavanda, resinas oscuras', desc:'Una versión más profunda y opulenta, ideal para noches elegantes y memorables.', image:'images/s118.jpg', price:94999},
+
+      {id:106, name:'INVICTUS PARFUM 1.1', category:'amaderados', type:'Aromático intenso', notes:'Pomelo, incienso, ámbar', desc:'Equilibrio entre frescura y sensualidad, con una presencia refinada y moderna.', image:'images/s119.jpg', price:94999},
+
+      {id:107, name:'ISLAND BLISS 1.1 CAJA', category:'frutales', type:'Frutal tropical', notes:'Piña, coco, flores blancas', desc:'Exótica y alegre, una fragancia que transporta a la calma del paraíso.', image:'images/s120.jpg', price:212999},
+
+      {id:108, name:'ISSEY MIYAKE FEM', category:'florales', type:'Floral acuático', notes:'Loto, melón, fresia', desc:'Fresca y pura, captura la esencia del agua con un toque femenino y delicado.', image:'images/s121.jpg', price:74999},
+
+      {id:109, name:'ISSEY MIYAKE MEN 1.1', category:'amaderados', type:'Cítrico especiado', notes:'Yuzu, cilantro, sándalo', desc:'Clásico y equilibrado, combina energía y serenidad con una elegancia natural.', image:'images/s122.jpg', price:94999},
+      {id:110, name:'JADORE 1.1', category:'florales', type:'Floral frutal', notes:'Jazmín, rosa, pera', desc:'Elegante y femenina, una fragancia que resalta la gracia y el encanto natural.', image:'images/s123.jpg', price:94999},
+
+      {id:111, name:'JEAN PAUL CLASIQUE FEM 1.1 CAJA', category:'orientales', type:'Floral avainillado', notes:'Azahar, jengibre, vainilla', desc:'Sensual y sofisticado, un clásico que combina dulzura con una fuerte personalidad.', image:'images/s124.jpg', price:94999},
+
+      {id:112, name:'JEAN PAUL DIVINE 1.1 LATA', category:'dulces', type:'Floral gourmand', notes:'Flor blanca, caramelo, ámbar', desc:'Brillante y moderna, una esencia que celebra la feminidad con un toque de lujo.', image:'images/s125.jpg', price:105999},
+
+      {id:113, name:'JEAN PAUL GARDEN PARADISE 1.1 LATA', category:'florales', type:'Floral tropical', notes:'Tiaré, vainilla, coco', desc:'Exótica y envolvente, una fragancia que evoca un jardín paradisíaco bajo el sol.', image:'images/s126.jpg', price:105999},
+
+      {id:114, name:'JEAN PAUL GARDEN PARADISE CAJA', category:'florales', type:'Floral tropical', notes:'Tiaré, vainilla, coco', desc:'Versión elegante en presentación de caja, ideal para quienes buscan frescura y estilo.', image:'images/s127.jpg', price:84999},
+
+      {id:115, name:'JEAN PAUL LA BELLE GARDEN CAJA 1.1', category:'dulces', type:'Floral avainillado', notes:'Pera, vainilla, haba tonka', desc:'Una versión sensual y encantadora que combina dulzura y poder femenino.', image:'images/s128.jpg', price:84999},
+
+      {id:116, name:'JEAN PAUL LA BELLE GARDEN LATA 1.1', category:'dulces', type:'Floral avainillado', notes:'Pera, vainilla, haba tonka', desc:'Dulce y elegante, con un diseño icónico que refleja lujo y feminidad.', image:'images/s129.jpg', price:105999},
+
+      {id:117, name:'JEAN PAUL LE MALE LE PERFUM LATA 1.1', category:'amaderados', type:'Oriental amaderado', notes:'Cardamomo, lavanda, iris', desc:'Intenso y sofisticado, una fragancia masculina que impone respeto y elegancia.', image:'images/s130.jpg', price:105999},
+
+      {id:118, name:'JEAN PAUL LE BEAU LE PERFUM 1.1 LATA', category:'dulces', type:'Ambarado dulce', notes:'Coco, haba tonka, madera de sándalo', desc:'Seductora y cálida, una mezcla irresistible de exotismo y poder masculino.', image:'images/s131.jpg', price:105999},
+
+      {id:119, name:'JEAN PAUL ELIXIR LATA 1.1', category:'dulces', type:'Ambarado intenso', notes:'Miel, vainilla, ambar', desc:'Potente y magnética, ideal para quienes buscan una presencia fuerte y duradera.', image:'images/s132.jpg', price:105999},
+
+      {id:120, name:'JEAN PAUL ULTRAMALE LATA 1.1', category:'dulces', type:'Oriental dulce', notes:'Pera, canela, vainilla', desc:'Explosiva y juvenil, mezcla sensualidad y energía con un fondo cálido y adictivo.', image:'images/s133.jpg', price:105999},
+
+      {id:121, name:'JEAN PAUL ULTRAMALE CAJA 1.1', category:'dulces', type:'Oriental dulce', notes:'Pera, canela, vainilla', desc:'Versión en caja con el mismo aroma intenso y envolvente que define la línea ULTRAMALE.', image:'images/s134.jpg', price:84999},
+      {id:122, name:'KALAN MARLY', category:'amaderados', type:'Amaderado especiado', notes:'Pimienta negra, ámbar, sándalo', desc:'Intenso y elegante, combina poder y calidez en una estela moderna y lujosa.', image:'images/s135.jpg', price:94999},
+
+      {id:123, name:'KING DOLCE GABANA 1.1', category:'cítricos', type:'Aromático fresco', notes:'Bergamota, vetiver, cedro', desc:'Una fragancia que evoca liderazgo y frescura mediterránea, ideal para el día.', image:'images/s136.jpg', price:95999},
+
+      {id:124, name:'KHAMRHA 1.1 COFRE LUJO', category:'orientales', type:'Ambarado especiado', notes:'Canela, oud, mirra', desc:'Opulento y envolvente, un perfume de lujo con notas exóticas y duraderas.', image:'images/s137.jpg', price:169999},
+
+      {id:125, name:'LA VIDA ES BELLA', category:'dulces', type:'Floral gourmand', notes:'Praliné, vainilla, iris', desc:'Icónica y femenina, celebra la alegría de vivir con una estela dulce y optimista.', image:'images/s138.jpg', price:98999},
+
+      {id:126, name:'LACOSTE AZUL', category:'frescos', type:'Aromático acuático', notes:'Pomelo, menta, vetiver', desc:'Energético y juvenil, ideal para quienes buscan frescura con elegancia deportiva.', image:'images/s139.jpg', price:94999},
+
+      {id:127, name:'LACOSTE BLANCA 1.1', category:'cítricos', type:'Aromático amaderado', notes:'Pomelo, romero, madera clara', desc:'Fresca y limpia, perfecta para el día a día con un toque de sofisticación casual.', image:'images/s140.jpg', price:95999},
+
+      {id:128, name:'LACOSTE ELEGANT 1.1', category:'amaderados', type:'Amaderado floral', notes:'Cedro, vetiver, jazmín', desc:'Refinada y moderna, destaca por su equilibrio entre elegancia y frescura.', image:'images/s141.jpg', price:84999},
+
+      {id:129, name:'LACOSTE NATURAL 1.1', category:'frescos', type:'Cítrico herbal', notes:'Lima, lavanda, almizcle', desc:'Simple y natural, una fragancia limpia que transmite calma y vitalidad.', image:'images/s142.jpg', price:74999},
+
+      {id:130, name:'LACOSTE NOIR 1.1', category:'dulces', type:'Aromático amaderado', notes:'Sandía, lavanda, pachulí', desc:'Elegante y misterioso, ideal para la noche y ocasiones especiales.', image:'images/s143.jpg', price:74999},
+
+      {id:131, name:'LACOSTE RED', category:'frutales', type:'Aromático dulce', notes:'Manzana, jazmín, cedro', desc:'Vibrante y juvenil, mezcla energía con una dulzura sutil y moderna.', image:'images/s144.jpg', price:79999},
+
+      {id:132, name:'LACOSTE RED 1.1 150 ML', category:'frutales', type:'Aromático dulce', notes:'Manzana, jazmín, cedro', desc:'Versión de mayor tamaño con la misma energía frutal y moderna del clásico.', image:'images/s145.jpg', price:95999},
+
+      {id:133, name:'LACOSTE ROUGE 1.1', category:'frescos', type:'Aromático especiado', notes:'Jengibre, cardamomo, madera seca', desc:'Picante y masculina, transmite fuerza y dinamismo con un toque deportivo.', image:'images/s146.jpg', price:94999},
+
+      {id:134, name:'LACOSTE SPARKLIN 1.1', category:'florales', type:'Floral chispeante', notes:'Manzana, jazmín, almizcle', desc:'Brillante y femenina, ideal para quienes irradian alegría y frescura.', image:'images/s147.jpg', price:74999},
+
+      {id:135, name:'LACOSTE TOUCH OF PINK', category:'florales', type:'Floral frutal', notes:'Naranja, jazmín, vainilla', desc:'Juvenil y espontánea, representa la energía y el optimismo femenino.', image:'images/s148.jpg', price:74999},
+
+      {id:136, name:'LACOSTE VERDE', category:'frescos', type:'Herbal amaderado', notes:'Menta, tomillo, vetiver', desc:'Refrescante y natural, ideal para quienes buscan una sensación verde y pura.', image:'images/s149.jpg', price:74999},
+
+      {id:137, name:'LADY MILLION 1.1', category:'dulces', type:'Floral ambarado', notes:'Frambuesa, miel, jazmín', desc:'Seductora y brillante, perfecta para destacar con elegancia y poder.', image:'images/s150.jpg', price:94999},
+
+      {id:138, name:'LAPIDUS 1.1', category:'amaderados', type:'Oriental amaderado', notes:'Miel, cuero, incienso', desc:'Clásico y varonil, una fragancia intensa con carácter fuerte y distintivo.', image:'images/s151.jpg', price:94999},
+      {id:139, name:'LATTAFA AMATHYSTE 1.1', category:'orientales', type:'Floral avainillado', notes:'Rosa, jazmín, vainilla', desc:'Suave y elegante, ideal para quienes buscan una estela dulce y sofisticada.', image:'images/s152.jpg', price:149999},
+
+      {id:140, name:'LATTAFA ASAD 1.1', category:'amaderados', type:'Amaderado especiado', notes:'Tabaco, pimienta negra, vainilla', desc:'Potente y magnético, una fragancia con personalidad dominante y cálida.', image:'images/s153.jpg', price:129999},
+
+      {id:141, name:'LATTAFA ASAD BOURBON 1.1', category:'dulces', type:'Ambarado dulce', notes:'Ron, vainilla, cuero', desc:'Exclusivo y envolvente, combina dulzura y fuerza en una mezcla adictiva.', image:'images/s154.jpg', price:121999},
+
+      {id:142, name:'LATTAFA ASAD ZANZIBAR 1.1', category:'orientales', type:'Especiado cálido', notes:'Canela, oud, ámbar', desc:'Inspirado en el exotismo de Zanzíbar, mezcla lujo y aventura.', image:'images/s155.jpg', price:115999},
+
+      {id:143, name:'LATTAFA EMEER 1.1 COFRE', category:'orientales', type:'Amaderado ambarado', notes:'Incienso, sándalo, resinas', desc:'De carácter real, elegante y místico, con una proyección imponente.', image:'images/s156.jpg', price:115999},
+
+      {id:144, name:'LATTAFA HAYA 1.1 CAJA', category:'florales', type:'Floral dulce', notes:'Rosa, durazno, vainilla', desc:'Romántica y sofisticada, una fragancia femenina de suavidad encantadora.', image:'images/s157.jpg', price:119999},
+
+      {id:145, name:'LATTAFA HAYA 1.1 COFRE', category:'florales', type:'Floral dulce', notes:'Rosa, durazno, vainilla', desc:'Versión en cofre que combina elegancia, dulzura y frescura oriental.', image:'images/s158.jpg', price:149999},
+
+      {id:146, name:'LATTAFA HONOR Y GLORY 1.1', category:'amaderados', type:'Ambarado especiado', notes:'Canela, ámbar, sándalo', desc:'Sólido y majestuoso, diseñado para quienes dejan huella a su paso.', image:'images/s159.jpg', price:149999},
+
+      {id:147, name:'LATTAFA NOBLE BLUSH 1.1', category:'florales', type:'Floral frutal', notes:'Melocotón, peonía, almizcle', desc:'Suave, femenina y encantadora, perfecta para el día o la oficina.', image:'images/s160.jpg', price:149999},
+
+      {id:148, name:'LATTAFA OUD FOR GLORY 1.1', category:'orientales', type:'Ambarado oud', notes:'Oud, ámbar, pachulí', desc:'Potente e intenso, un perfume árabe de carácter fuerte y duradero.', image:'images/s161.jpg', price:149999},
+
+      {id:149, name:'LATTAFA SUBLIME 1.1', category:'florales', type:'Floral ambarado', notes:'Rosa, vainilla, ámbar', desc:'Una fusión equilibrada entre dulzura y elegancia oriental.', image:'images/s162.jpg', price:149999},
+
+      {id:150, name:'LAYTON MARLY', category:'dulces', type:'Ambarado especiado', notes:'Manzana, lavanda, vainilla', desc:'Magnético y refinado, una fragancia que combina lujo y versatilidad.', image:'images/s163.jpg', price:94999},
+
+      {id:151, name:'LEGEND', category:'amaderados', type:'Aromático amaderado', notes:'Lavanda, bergamota, musgo', desc:'Clásico y elegante, ideal para hombres seguros y modernos.', image:'images/s164.jpg', price:74999},
+
+      {id:152, name:'LEGEND SPIRIT', category:'frescos', type:'Aromático acuático', notes:'Pomelo, lavanda, almizcle', desc:'Refrescante y ligero, evoca libertad y vitalidad.', image:'images/s165.jpg', price:74999},
+
+      {id:153, name:'LES SABLES LV 1.1', category:'amaderados', type:'Oriental cálido', notes:'Incienso, ámbar, pimienta', desc:'Inspirado en el desierto, transmite calidez, misterio y profundidad.', image:'images/s166.jpg', price:94999},
+
+      {id:154, name:'LIGHT BLUE FEM 1.1', category:'cítricos', type:'Floral fresco', notes:'Limón, bambú, cedro', desc:'Brillante y juvenil, una fragancia icónica del verano italiano.', image:'images/s167.jpg', price:94999},
+
+      {id:155, name:'LIGHT BLUE SUMMER FEM 1.1', category:'frutales', type:'Floral frutal', notes:'Manzana verde, jazmín, almizcle', desc:'Refrescante y chispeante, ideal para días soleados y relajados.', image:'images/s168.jpg', price:94999},
+
+      {id:156, name:'LIGHT BLUE MEN 1.1', category:'frescos', type:'Aromático cítrico', notes:'Pomelo, romero, incienso', desc:'Fresco, limpio y varonil, un clásico mediterráneo moderno.', image:'images/s169.jpg', price:94999},
+
+      {id:157, name:'LOVE LOVE', category:'dulces', type:'Floral frutal', notes:'Pomelo, rosa, almizcle', desc:'Alegre y romántica, una fragancia que irradia optimismo y ternura.', image:'images/s170.jpg', price:74999},
+      {id:158, name:'MARC JACOBS BOLSO 1.1', category:'florales', type:'Floral frutal', notes:'Pera, magnolia, almizcle', desc:'Elegante y moderna, una fragancia que combina frescura con un toque chic.', image:'images/s171.jpg', price:104999},
+
+      {id:159, name:'MAYAR LATTAFA ROSADA LATA 1.1', category:'dulces', type:'Floral gourmand', notes:'Frambuesa, vainilla, almizcle', desc:'Dulce y romántica, ideal para quienes disfrutan aromas delicados y femeninos.', image:'images/s172.jpg', price:159999},
+
+      {id:160, name:'MAYAR LATTAFA AZUL LATA 1.1', category:'frescos', type:'Floral acuático', notes:'Lichi, jazmín, almizcle', desc:'Fresca y suave, transmite pureza y serenidad con un toque moderno.', image:'images/s173.jpg', price:159999},
+
+      {id:161, name:'MILLION GOLD FEM 1.1', category:'dulces', type:'Floral ambarado', notes:'Naranja, miel, ámbar', desc:'Sensual y brillante, una fragancia que refleja lujo y confianza femenina.', image:'images/s174.jpg', price:94999},
+
+      {id:162, name:'MISS DIOR 1.1', category:'florales', type:'Floral romántico', notes:'Rosa, peonía, almizcle', desc:'Clásica y femenina, símbolo de elegancia y ternura atemporal.', image:'images/s175.jpg', price:94999},
+
+      {id:163, name:'MISS DIOR CHAIRE 1.1', category:'florales', type:'Floral ambarado', notes:'Rosa, sándalo, vainilla', desc:'Refinada y suave, una interpretación cálida y sensual del icónico Miss Dior.', image:'images/s176.jpg', price:84999},
+
+      {id:164, name:'MONTALE ARABIANS TONKA', category:'orientales', type:'Ambarado dulce', notes:'Azafrán, tonka, oud', desc:'Opulenta y envolvente, mezcla dulzura y fuerza en perfecta armonía.', image:'images/s177.jpg', price:74999},
+
+      {id:165, name:'MONTALE ARABIANS', category:'orientales', type:'Ambarado especiado', notes:'Rosa, oud, ámbar', desc:'Poderosa y mística, ideal para quienes aman fragancias profundas y elegantes.', image:'images/s178.jpg', price:74999},
+
+      {id:166, name:'MONTALE INTENSE CAFÉ', category:'dulces', type:'Gourmand floral', notes:'Café, rosa, vainilla', desc:'Aromática y adictiva, una combinación irresistible de café dulce y flores.', image:'images/s179.jpg', price:74999},
+
+      {id:167, name:'MONTALE ROSES MUSK', category:'florales', type:'Floral almizclado', notes:'Rosa, jazmín, almizcle blanco', desc:'Pura y sofisticada, la esencia de la feminidad en una fragancia atemporal.', image:'images/s180.jpg', price:76999},
+
+      {id:168, name:'MONTALE STARRY NIGHT', category:'amaderados', type:'Ambarado floral', notes:'Manzana, rosa, ámbar', desc:'Brillante y elegante, una fragancia que deja una estela celestial.', image:'images/s181.jpg', price:77999},
+
+      {id:169, name:'MOSCHINO FRESH DORADO 1.1', category:'florales', type:'Floral ambarado', notes:'Mandarina, jazmín, vainilla', desc:'Divertida y moderna, une lujo y humor en una mezcla chispeante.', image:'images/s182.jpg', price:94999},
+
+      {id:170, name:'MOSCHINO PINK FRESH 1.1', category:'florales', type:'Floral frutal', notes:'Pomelo rosado, rosa, lirio', desc:'Fresca y femenina, irradia optimismo y energía juvenil.', image:'images/s183.jpg', price:94988},
+
+      {id:171, name:'MOSCHINO FRESH AZUL 1.1', category:'frescos', type:'Aromático acuático', notes:'Bergamota, madera blanca, almizcle', desc:'Refrescante y ligera, ideal para días cálidos y activos.', image:'images/s184.jpg', price:94899},
+
+      {id:172, name:'NAUTICA VOYAGE 1.1', category:'frescos', type:'Aromático marino', notes:'Manzana verde, loto, musgo', desc:'Icónica y limpia, representa libertad, aventura y frescura oceánica.', image:'images/s185.jpg', price:94988},
+
+      {id:173, name:'NOW WOMEN 1.1', category:'florales', type:'Floral moderno', notes:'Magnolia, vainilla, almizcle', desc:'Suave y sofisticada, pensada para mujeres seguras y elegantes.', image:'images/s186.jpg', price:159989},
+
+      {id:174, name:'ODYSSEY AOUD 1.1', category:'orientales', type:'Ambarado oud', notes:'Oud, canela, ámbar', desc:'Profunda y exótica, una fragancia con carácter árabe y gran duración.', image:'images/s187.jpg', price:127999},
+
+      {id:175, name:'ODYSSEY ARTISTO 1.1', category:'dulces', type:'Floral gourmand', notes:'Cereza, vainilla, almizcle', desc:'Artística y elegante, combina dulzura y sofisticación en equilibrio perfecto.', image:'images/s188.jpg', price:129999},
+
+      {id:176, name:'ODYSSEY CHOCOLATE 1.1', category:'dulces', type:'Gourmand ambarado', notes:'Cacao, ámbar, vainilla', desc:'Rica y adictiva, ideal para los amantes de fragancias cálidas y cremosas.', image:'images/s189.jpg', price:129999},
+
+      {id:177, name:'ODYSSEY LIMONI 1.1', category:'cítricos', type:'Cítrico floral', notes:'Limón, bergamota, jazmín', desc:'Fresca y vital, evoca la energía del verano con notas cítricas chispeantes.', image:'images/s190.jpg', price:129990},
+
+      {id:178, name:'ODYSSEY MANDARIN SKY 1.1', category:'cítricos', type:'Cítrico dulce', notes:'Mandarina, almizcle, vainilla', desc:'Dulce y ligera, transmite alegría con un toque frutal moderno.', image:'images/s191.jpg', price:129990},
+
+      {id:179, name:'ODYSSEY MANDARIN SKY ELIXIR 1.1', category:'dulces', type:'Cítrico gourmand', notes:'Mandarina, miel, tonka', desc:'Más intensa y envolvente, una versión concentrada y cálida del original.', image:'images/s192.jpg', price:132990},
+
+      {id:180, name:'ODYSSEY HOMME BLANCA 1.1', category:'amaderados', type:'Aromático fresco', notes:'Pimienta, cedro, lavanda', desc:'Elegante y moderna, una fragancia limpia con carácter masculino.', image:'images/s193.jpg', price:129990},
+
+      {id:181, name:'ODYSSEY HOMME 1.1', category:'frescos', type:'Aromático especiado', notes:'Cardamomo, pomelo, vetiver', desc:'Refinada y versátil, ideal para cualquier ocasión.', image:'images/s194.jpg', price:129990},
+
+      {id:182, name:'ODYSSEY MEGA 1.1', category:'orientales', type:'Ambarado especiado', notes:'Canela, ámbar, incienso', desc:'Intensa y dominante, para quienes buscan una presencia fuerte y duradera.', image:'images/s195.jpg', price:129990},
+
+      {id:183, name:'ODYSSEY SPECTRA 1.1', category:'amaderados', type:'Aromático amaderado', notes:'Pimienta negra, vetiver, almizcle', desc:'Equilibrada y elegante, una mezcla fresca con fondo cálido.', image:'images/s196.jpg', price:129990},
+
+      {id:184, name:'ODYSSEY CANDY 1.1', category:'dulces', type:'Gourmand frutal', notes:'Frambuesa, caramelo, almizcle', desc:'Juvenil y divertida, combina dulzura y frescura con encanto.', image:'images/s197.jpg', price:129990},
+
+      {id:185, name:'ODYSSEY TYRANT 1.1', category:'orientales', type:'Ambarado cuero', notes:'Cuero, vainilla, ámbar', desc:'Fuerte y sofisticada, ideal para quienes imponen presencia.', image:'images/s198.jpg', price:129990},
+
+      {id:186, name:'ODYSSEY WILD ONE GOLD 1.1', category:'amaderados', type:'Ambarado especiado', notes:'Miel, canela, cedro', desc:'Audaz y lujosa, una mezcla cálida con un toque salvaje.', image:'images/s199.jpg', price:129990},
+
+      {id:187, name:'OLYMPEA 1.1', category:'dulces', type:'Floral ambarado', notes:'Vainilla salada, jazmín, ámbar gris', desc:'Sensual y poderosa, un aroma que representa la victoria femenina.', image:'images/s200.jpg', price:94990},
+
+      {id:188, name:'OMBRE NOMADA 1.1', category:'amaderados', type:'Ambarado cuero', notes:'Cuero, sándalo, ámbar', desc:'Misteriosa y elegante, una fragancia envolvente de alto carácter.', image:'images/s201.jpg', price:129990},
+
+      {id:189, name:'OMNIA AMATHYSTE', category:'florales', type:'Floral amaderado', notes:'Iris, rosa, pomelo', desc:'Delicada y sofisticada, una joya aromática para el día.', image:'images/s202.jpg', price:74990},
+
+      {id:190, name:'OMNIA AMATHYSTE 1.1', category:'florales', type:'Floral amaderado', notes:'Iris, rosa, pomelo', desc:'Refinada y suave, ideal para mujeres elegantes y discretas.', image:'images/s203.jpg', price:94990},
+
+      {id:191, name:'OMNIA CORAL 1.1', category:'frutales', type:'Floral frutal', notes:'Granada, hibisco, almizcle', desc:'Brillante y veraniega, un aroma lleno de vida y frescura.', image:'images/s204.jpg', price:94990},
+
+      {id:192, name:'OMNIA CRISTAL 1.1', category:'frescos', type:'Floral acuático', notes:'Loto, bambú, almizcle', desc:'Ligera y pura, perfecta para climas cálidos y estilos naturales.', image:'images/s205.jpg', price:94990},
+
+      {id:193, name:'OMNIA MARY KATRANZAU 1.1', category:'florales', type:'Floral dulce', notes:'Flor blanca, vainilla, almizcle', desc:'Creativa y colorida, una fragancia que celebra el arte y la moda.', image:'images/s206.jpg', price:94990},
+
+      {id:194, name:'ONE MILLION GOLD 1.1', category:'dulces', type:'Ambarado avainillado', notes:'Miel, mandarina, cuero', desc:'Lujosa y magnética, la versión más cálida y sofisticada del clásico.', image:'images/s207.jpg', price:94990},
+
+      {id:195, name:'ONE MILLION ELIXIR 1.1', category:'dulces', type:'Ambarado intenso', notes:'Davanna, vainilla, tonka', desc:'Concentrada y sensual, una evolución más profunda y duradera.', image:'images/s208.jpg', price:94990},
+
+      {id:196, name:'ONE MILLION LUCKY 1.1', category:'dulces', type:'Gourmand amaderado', notes:'Avellana, ciruela, miel', desc:'Joven y vibrante, un aroma atrevido con un toque dulce y moderno.', image:'images/s209.jpg', price:94990},
+
+      {id:197, name:'ONE MILLION MEN 1.1', category:'dulces', type:'Ambarado especiado', notes:'Canela, cuero, ámbar', desc:'Icónica y poderosa, símbolo de lujo y masculinidad.', image:'images/s210.jpg', price:94990},
+
+      {id:198, name:'ONE MILLION PRIVE 1.1', category:'orientales', type:'Ambarado tabaco', notes:'Cacao, tabaco, tonka', desc:'Cálida y profunda, ideal para la noche y ocasiones especiales.', image:'images/s211.jpg', price:94990},
+
+      {id:199, name:'ONE MILION ROYAL 1.1', category:'amaderados', type:'Ambarado fresco', notes:'Cedro, lavanda, ámbar', desc:'Majestuosa y elegante, un aroma que mezcla lujo y poder.', image:'images/s212.jpg', price:94990},
+
+      {id:200, name:'ORIENTICA AZURE FANTASY VERDE 1.1', category:'frescos', type:'Aromático cítrico', notes:'Lima, menta, vetiver', desc:'Refrescante y vibrante, ideal para quienes buscan energía y frescura pura.', image:'images/s213.jpg', price:169990},
+
+      {id:201, name:'ORIENTICA AMBER NOIR 1.1 NEGRA', category:'orientales', type:'Ambarado oscuro', notes:'Ámbar, incienso, oud', desc:'Misteriosa y profunda, una fragancia con fuerza y elegancia árabe.', image:'images/s214.jpg', price:189990},
+
+      {id:202, name:'ORIENTICA DANIA 1.1 TIPO ORIGINAL', category:'florales', type:'Floral dulce', notes:'Rosa, jazmín, almizcle', desc:'Femenina y encantadora, una versión inspirada en la elegancia oriental.', image:'images/s215.jpg', price:189990},
+
+      {id:203, name:'ORIENTICA DORADA 1.1 COFRE TIPOORIG', category:'orientales', type:'Ambarado floral', notes:'Ámbar, miel, flores blancas', desc:'Cálida y sofisticada, una joya en presentación de lujo.', image:'images/s216.jpg', price:189990},
+
+      {id:204, name:'ORIENTICA DORADA PASTA COFRE 1.1', category:'orientales', type:'Ambarado gourmand', notes:'Miel, vainilla, sándalo', desc:'Dulce y envolvente, una fragancia artesanal con sello árabe.', image:'images/s217.jpg', price:147990},
+
+      {id:205, name:'ORIENTICA SAFFRON PASTA CAJA', category:'orientales', type:'Ambarado especiado', notes:'Azafrán, madera, ámbar', desc:'Exótica y cálida, ideal para quienes buscan autenticidad y elegancia.', image:'images/s218.jpg', price:94990},
+
+      {id:206, name:'ORIENTICA SAFFRON PASTA COFRE 1.1', category:'orientales', type:'Ambarado especiado', notes:'Azafrán, vainilla, oud', desc:'Envolvente y sofisticada, una versión lujosa de notas orientales intensas.', image:'images/s219.jpg', price:149990},
+
+      {id:207, name:'ORIENTICA ROUGE PASTA COFRE 1.1', category:'dulces', type:'Floral gourmand', notes:'Fresa, rosa, azúcar', desc:'Dulce y romántica, perfecta para quienes aman fragancias golosas.', image:'images/s220.jpg', price:149990},
+
+      {id:208, name:'ORIENTICA VELVET PASTA CAJA', category:'orientales', type:'Ambarado floral', notes:'Rosa, ámbar, vainilla', desc:'Suave y envolvente, una combinación de lujo y calidez oriental.', image:'images/s221.jpg', price:94990},
+
+      {id:209, name:'ORIENTICA VELVET PASTA COFRE 1.1', category:'orientales', type:'Ambarado floral', notes:'Rosa, ámbar, vainilla', desc:'Versión de colección, elegante y profunda con un toque aterciopelado.', image:'images/s222.jpg', price:149990},
+      {id:210, name:'PARIS HILTON FEM', category:'florales', type:'Floral frutal', notes:'Manzana, jazmín, sándalo', desc:'Moderna y femenina, una fragancia que combina frescura y glamour.', image:'images/s223.jpg', price:89990},
+
+      {id:211, name:'PARIS HILTON MEN', category:'amaderados', type:'Aromático fresco', notes:'Pepino, almizcle, ámbar', desc:'Refrescante y elegante, ideal para hombres con estilo natural.', image:'images/s224.jpg', price:74990},
+
+      {id:212, name:'PHANTOM 1.1', category:'amaderados', type:'Aromático dulce', notes:'Lavanda, vainilla, vetiver', desc:'Innovadora y moderna, una mezcla futurista que combina energía y sofisticación.', image:'images/s225.jpg', price:94990},
+
+      {id:213, name:'PHANTOM NEGRA 1.1', category:'amaderados', type:'Oriental especiado', notes:'Cardamomo, lavanda, ámbar gris', desc:'Una versión más intensa y misteriosa, con un carácter audaz y nocturno.', image:'images/s226.jpg', price:94990},
+
+      {id:214, name:'POLO BLUE', category:'frescos', type:'Acuático aromático', notes:'Melón, albahaca, almizcle', desc:'Clásica y fresca, evoca libertad, aire limpio y elegancia masculina.', image:'images/s227.jpg', price:74990},
+
+      {id:215, name:'POLO RED', category:'amaderados', type:'Amaderado especiado', notes:'Toronja, ámbar, café', desc:'Energética y moderna, perfecta para hombres atrevidos y apasionados.', image:'images/s228.jpg', price:74990},
+
+      {id:216, name:'PURE XS MEN 1.1', category:'dulces', type:'Oriental dulce', notes:'Canela, vainilla, cuero', desc:'Provocadora y seductora, ideal para quienes disfrutan destacar con intensidad.', image:'images/s229.jpg', price:94990},
+
+      {id:217, name:'PURE XS FEM 1.1', category:'dulces', type:'Floral avainillado', notes:'Ylang-ylang, palomitas de maíz, vainilla', desc:'Dulce y atrevida, una fragancia divertida que mezcla glamour con energía.', image:'images/s230.jpg', price:94990},
+
+      {id:218, name:'PURR KATY PERRY 1.1', category:'dulces', type:'Floral frutal', notes:'Durazno, jazmín, vainilla', desc:'Encantadora y coqueta, refleja la esencia juvenil y juguetona de su creadora.', image:'images/s231.jpg', price:74990},
+
+      {id:219, name:'QUEEN DOLCE GABANA 1.1', category:'florales', type:'Floral dulce', notes:'Pera, jazmín, sándalo', desc:'Elegante y sofisticada, diseñada para mujeres con carácter y encanto.', image:'images/s232.jpg', price:94990},
+
+      {id:220, name:'RENAISSANCE XERJOFF 1.1', category:'nicho', type:'Cítrico aromático', notes:'Lima, menta, ámbar', desc:'Refrescante y refinada, representa el renacer del lujo y la elegancia italiana.', image:'images/s233.jpg', price:127990},
+
+      {id:221, name:'R.E.M ARIANA 1.1', category:'dulces', type:'Gourmand floral', notes:'Caramelo salado, lavanda, vainilla', desc:'Soñadora y celestial, una mezcla etérea que transmite paz y dulzura.', image:'images/s234.jpg', price:104990},
+      {id:222, name:'SANTAL 33 1.1', category:'nicho', type:'Amaderado especiado', notes:'Sándalo, cuero, iris', desc:'Minimalista y elegante, una fragancia icónica que equilibra calidez y sofisticación.', image:'images/s235.jpg', price:94990},
+
+      {id:223, name:'SANTOS CARTIER 1.1', category:'amaderados', type:'Aromático especiado', notes:'Lavanda, clavel, pachulí', desc:'Clásica y distinguida, ideal para quienes valoran la elegancia tradicional.', image:'images/s236.jpg', price:99990},
+
+      {id:224, name:'SAUVAGE 1.1', category:'amaderados', type:'Aromático fresco', notes:'Bergamota, pimienta, ambroxan', desc:'Libre, intensa y poderosa, una fragancia que irradia masculinidad moderna.', image:'images/s237.jpg', price:94990},
+
+      {id:225, name:'SAUVAGE ELIXIR 1.1 COFRE', category:'amaderados', type:'Aromático especiado', notes:'Canela, lavanda, regaliz', desc:'Versión profunda y magnética, perfecta para noches intensas y elegantes.', image:'images/s238.jpg', price:94990},
+
+      {id:226, name:'SCANDAL FEM ABSOLU 1.1', category:'dulces', type:'Floral dulce', notes:'Miel, gardenia, pachulí', desc:'Seductora y audaz, combina dulzura y poder femenino en una esencia inolvidable.', image:'images/s239.jpg', price:94990},
+
+      {id:227, name:'SCANDAL MEN 1.1', category:'amaderados', type:'Ambarado dulce', notes:'Caramelo, haba tonka, vetiver', desc:'Carismática y adictiva, representa al hombre seguro y apasionado.', image:'images/s240.jpg', price:94990},
+
+      {id:228, name:'SI ARMANY', category:'florales', type:'Chipre floral', notes:'Grosella negra, rosa, vainilla', desc:'Elegante y empoderada, una fragancia que celebra la feminidad con clase.', image:'images/s241.jpg', price:74990},
+
+      {id:229, name:'SORBETTO ROSSO 1.1', category:'frutales', type:'Acuático frutal', notes:'Sandía, praliné, almizcle', desc:'Refrescante y veraniega, una esencia alegre y jugosa para días luminosos.', image:'images/s242.jpg', price:109990},
+
+      {id:230, name:'SHAHEEN GOLD', category:'orientales', type:'Ambarado floral', notes:'Rosa, ámbar, almizcle', desc:'Lujosa y brillante, inspirada en la opulencia dorada del Medio Oriente.', image:'images/s243.jpg', price:169990},
+
+      {id:231, name:'SHIMER 250ML', category:'corporales', type:'Bruma corporal brillante', notes:'Vainilla, almizcle, flores suaves', desc:'Spray corporal con partículas brillantes que perfuman e iluminan la piel.', image:'images/s244.jpg', price:24990},
+
+      {id:232, name:'SHIMER 100 ML', category:'corporales', type:'Bruma corporal brillante', notes:'Coco, flor blanca, almizcle', desc:'Ideal para uso diario, deja la piel con un brillo sutil y aroma delicado.', image:'images/s245.jpg', price:20990},
+
+      {id:233, name:'SPICEBOMB V&R 1.1', category:'amaderados', type:'Especiado cálido', notes:'Canela, cuero, tabaco', desc:'Explosivo y elegante, una mezcla intensa diseñada para impactar.', image:'images/s246.jpg', price:94990},
+
+      {id:234, name:'STARRY NIGHT 1.1', category:'nicho', type:'Ambarado floral', notes:'Bergamota, rosa, almizcle blanco', desc:'Hipnótica y celestial, refleja la calma y el misterio de una noche estrellada.', image:'images/s247.jpg', price:94990},
+
+      {id:235, name:'STARWALKER 1.1', category:'amaderados', type:'Aromático fresco', notes:'Mandarina, jengibre, madera de cedro', desc:'Fresca y elegante, ideal para espíritus libres y confiados.', image:'images/s248.jpg', price:94990},
+
+      {id:236, name:'STRONGER WITH YOU 1.1', category:'dulces', type:'Ambarado dulce', notes:'Castaña, vainilla, canela', desc:'Romántica y moderna, una fragancia que celebra la conexión y el amor auténtico.', image:'images/s249.jpg', price:99990},
+
+      {id:237, name:'SWEET LIKE CANDY 1.1', category:'dulces', type:'Gourmand frutal', notes:'Crema batida, mora, vainilla', desc:'Dulce y encantadora, una explosión de ternura y energía juvenil.', image:'images/s250.jpg', price:90000},
+
+      {id:238, name:'SWISS ARMY 1.1', category:'frescos', type:'Aromático verde', notes:'Lavanda, pino, almizcle', desc:'Refrescante y limpio, representa pureza, naturaleza y aventura.', image:'images/s251.jpg', price:94990},
+      {id:252, name:'THANK U NEXT 1.1', category:'dulces', type:'Gourmand floral', notes:'Frutas rojas, vainilla, almizcle', desc:'Joven y divertida, mezcla dulzura con un toque audaz, ideal para el día a día.', image:'images/s252.jpg', price:104990},
+
+      {id:253, name:'THANK U NEXT 2.0 1.1', category:'dulces', type:'Gourmand floral', notes:'Cereza, rosa, caramelo', desc:'Versión más intensa y moderna, perfecta para destacar con personalidad.', image:'images/s253.jpg', price:104990},
+
+      {id:254, name:'THE MATCHA 26 1.1', category:'frescos', type:'Aromático verde', notes:'Té verde, jazmín, cedro', desc:'Refrescante y energizante, captura la serenidad y frescura del matcha japonés.', image:'images/s254.jpg', price:94990},
+
+      {id:255, name:'THE ONE FEM', category:'florales', type:'Floral oriental', notes:'Durazno, lichi, ámbar', desc:'Sofisticada y elegante, ideal para mujeres seguras de sí mismas.', image:'images/s255.jpg', price:74990},
+
+      {id:256, name:'THE ONE MEN', category:'amaderados', type:'Amaderado especiado', notes:'Naranja, tabaco, ámbar', desc:'Masculina y elegante, combina fuerza con un toque sensual.', image:'images/s256.jpg', price:74990},
+
+      {id:257, name:'TOMMY GIRL 1.1', category:'frutales', type:'Floral frutal', notes:'Lirio, jazmín, cítricos', desc:'Fresca y juvenil, refleja energía positiva y vitalidad.', image:'images/s257.jpg', price:104990},
+
+      {id:258, name:'TOMMY MEN 1.1', category:'amaderados', type:'Aromático especiado', notes:'Lavanda, cítricos, cedro', desc:'Clásica y fresca, perfecta para hombres activos y modernos.', image:'images/s258.jpg', price:104990},
+
+      {id:259, name:'TOY 2 1.1', category:'dulces', type:'Gourmand floral', notes:'Frambuesa, vainilla, almizcle', desc:'Divertida y coqueta, ideal para quienes disfrutan aromas únicos y alegres.', image:'images/s259.jpg', price:105990},
+
+      {id:260, name:'TOY 2 BUBBLEGUM 1.1', category:'dulces', type:'Gourmand frutal', notes:'Chicle, caramelo, frutas', desc:'Juguetona y dulce, una fragancia que captura la nostalgia y diversión.', image:'images/s260.jpg', price:104990},
+
+      {id:261, name:'TOY BOY 1.1', category:'amaderados', type:'Amaderado floral', notes:'Pimienta, rosa, cedro', desc:'Moderna y atrevida, perfecta para hombres seguros y elegantes.', image:'images/s261.jpg', price:104990},
+
+      {id:262, name:'VALENTINO UOMO BORN IN ROMA 1.1', category:'amaderados', type:'Amaderado oriental', notes:'Bergamota, lavanda, cuero', desc:'Elegante y sofisticada, refleja estilo y masculinidad contemporánea.', image:'images/s262.jpg', price:129990},
+
+      {id:263, name:'VALENTINO DONNA 1.1', category:'florales', type:'Floral chypre', notes:'Iris, rosa, ámbar', desc:'Clásica y refinada, ideal para mujeres con carácter y elegancia.', image:'images/s263.jpg', price:129990},
+
+      {id:264, name:'VERSACE FRAICHE', category:'frescos', type:'Aromático cítrico', notes:'Limón, romero, sándalo', desc:'Refrescante y vital, perfecta para días cálidos y energía positiva.', image:'images/s264.jpg', price:74990},
+
+      {id:265, name:'VERSACE FRAICHE 1.1', category:'frescos', type:'Aromático cítrico', notes:'Bergamota, neroli, almizcle', desc:'Versión moderna y elegante, mantiene frescura con sofisticación.', image:'images/s265.jpg', price:94990},
+
+      {id:266, name:'YARA 1.1', category:'dulces', type:'Floral frutal', notes:'Durazno, jazmín, almizcle', desc:'Encantadora y femenina, ideal para resaltar dulzura y juventud.', image:'images/s266.jpg', price:119990},
+
+      {id:267, name:'YARA X30 MINI 1.1', category:'dulces', type:'Floral frutal', notes:'Cítricos, rosa, almizcle', desc:'Versión mini, perfecta para llevar y mantener frescura durante todo el día.', image:'images/s267.jpg', price:89900},
+
+      {id:268, name:'YARA CANDY X30 MINI 1.1', category:'dulces', type:'Gourmand frutal', notes:'Frutas rojas, caramelo, almizcle', desc:'Dulce y práctica, ideal para quienes quieren aroma divertido en tamaño compacto.', image:'images/s268.jpg', price:89990},
+
+      {id:269, name:'YARA AMARILLA TOUS 1.1', category:'florales', type:'Floral frutal', notes:'Limoncillo, rosa, almizcle', desc:'Fresca y alegre, transmite energía y juventud.', image:'images/s269.jpg', price:119990},
+
+      {id:270, name:'YARA BLANCA MOI 1.1', category:'florales', type:'Floral suave', notes:'Lirio, jazmín, sándalo', desc:'Elegante y delicada, perfecta para ocasiones especiales.', image:'images/s270.jpg', price:114990},
+
+      {id:271, name:'YARA CANDY FUCSIA 1.1', category:'dulces', type:'Gourmand frutal', notes:'Frambuesa, caramelo, vainilla', desc:'Divertida y femenina, combina dulzura con personalidad.', image:'images/s271.jpg', price:114990},
+
+      {id:272, name:'YELLOW DIAMOND 1.1', category:'florales', type:'Floral cítrico', notes:'Naranja, mimosa, almizcle', desc:'Radiante y elegante, ideal para mujeres sofisticadas y luminosas.', image:'images/s272.jpg', price:94990},
+
+      {id:273, name:'YUM YUM 1.1 COFRE', category:'dulces', type:'Gourmand floral', notes:'Vainilla, caramelo, almizcle', desc:'Dulce y lujosa, una fragancia encantadora para regalar o disfrutar.', image:'images/s273.jpg', price:274990},
+
+      {id:274, name:'YUM YUM 1.1 CAJA', category:'dulces', type:'Gourmand floral', notes:'Chocolate, vainilla, frutas rojas', desc:'Versión clásica, deliciosa y atractiva, perfecta para cualquier ocasión.', image:'images/s274.jpg', price:179990},
+ ];
+
+
+    const catalogEl = document.getElementById('catalog');
+    const searchInput = document.getElementById('searchInput');
+
+  function createCard(p){
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.dataset.category = p.category;
+
+  const imgwrap = document.createElement('div');
+  imgwrap.className = 'imgwrap';
+  const img = document.createElement('img');
+  img.src = p.image;
+  img.alt = p.name;
+  imgwrap.appendChild(img);
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.innerHTML = `
+    <div>
+      <div class="title">${p.name}</div>
+      <div class="type">${p.type} · ${p.notes}</div>
+    </div>
+  `;
+
+  const desc = document.createElement('div');
+  desc.className = 'desc';
+  desc.textContent = p.desc;
+
+  // ⭐ NUEVA LÍNEA PARA EL PRECIO (DESPUÉS DE DESC)
+  const price = document.createElement('div');
+  price.className = 'price';
+  price.textContent = `💰 $${p.price.toLocaleString()}`;
+
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  actions.innerHTML = `
+    <button class="primary" onclick="openWhatsApp('${encodeURIComponent(p.name)}')">Tu nueva esencia aquí 👇</button>
+    <button class="secondary" onclick="shareProduct(${p.id})">Compartir</button>
+  `;
+
+  card.appendChild(imgwrap);
+  card.appendChild(meta);
+  card.appendChild(desc);
+  card.appendChild(price);  // ←⭐ Aquí va el precio
+  card.appendChild(actions);
+
+  return card;
+}
+
+
+
+
+    function render(items){
+      catalogEl.innerHTML = '';
+      items.forEach(i => catalogEl.appendChild(createCard(i)));
+    }
+
+    render(products);
+
+    document.querySelectorAll('.controls .chip').forEach(btn => {
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.controls .chip').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const f = btn.dataset.filter;
+        applyFilter(f, searchInput.value.trim());
+      });
+    });
+
+    searchInput.addEventListener('input', ()=>{
+      const active = document.querySelector('.controls .chip.active').dataset.filter;
+      applyFilter(active, searchInput.value.trim());
+    });
+
+    function applyFilter(filter, q){
+      q = q.toLowerCase();
+      let filtered = products.filter(p => {
+        const matchesFilter = (filter === 'all') ? true : p.category === filter;
+        const matchesQuery = q === '' ? true : (p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.notes.toLowerCase().includes(q));
+        return matchesFilter && matchesQuery;
+      });
+      render(filtered);
+    }
+
+    function openWhatsApp(productName){
+  const text = `Hola 👋 Me interesa el perfume *${productName}*. ¿Me das más información y disponibilidad?`;
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
+    function shareProduct(id){
+      const p = products.find(x=>x.id===id);
+      if(navigator.share){
+        navigator.share({title:p.name,text:`Mira este perfume: ${p.name} — ${p.desc}`}).catch(()=>{});
+      } else {
+        prompt('Copia este texto para compartir:',`${p.name} - ${p.desc}`);
+      }
+    }
+  </script>
+</body>
+</html>
